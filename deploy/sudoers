@@ -1,0 +1,1 @@
+mihomo-console ALL=(root) NOPASSWD: /usr/local/bin/mihomo-console-config read, /usr/local/bin/mihomo-console-config validate, /usr/local/bin/mihomo-console-config apply, /usr/local/bin/mihomo-console-config restore *, /usr/local/bin/mihomo-console-config restart, /usr/local/bin/mihomo-console-config uptime

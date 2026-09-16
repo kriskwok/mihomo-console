@@ -1,0 +1,52 @@
+#!/bin/bash
+set -euo pipefail
+
+CONFIG_FILE=/data/clash/config.yaml
+CLASH_BIN=${CLASH_BIN:-/usr/local/bin/clash}
+CONFIG_DIR=$(dirname "$CONFIG_FILE")
+
+case "${1:-}" in
+  read)
+    cat "$CONFIG_FILE"
+    ;;
+  validate)
+    tmp=$(mktemp /tmp/mihomo-console-validate-XXXXXX.yaml)
+    trap 'rm -f "$tmp"' EXIT
+    cat > "$tmp"
+    "$CLASH_BIN" -t -d "$CONFIG_DIR" -f "$tmp"
+    ;;
+  apply)
+    tmp=$(mktemp /tmp/mihomo-console-apply-XXXXXX.yaml)
+    trap 'rm -f "$tmp"' EXIT
+    cat > "$tmp"
+    "$CLASH_BIN" -t -d "$CONFIG_DIR" -f "$tmp"
+    backup="$CONFIG_FILE.bak-$(date +%Y%m%d-%H%M%S)"
+    cp -a "$CONFIG_FILE" "$backup"
+    install -o clash -g clash -m 0644 "$tmp" "$CONFIG_FILE"
+    echo "backup=$backup"
+    ;;
+  restore)
+    name="${2:-}"
+    if [[ ! "$name" =~ ^config\.yaml\.bak-[0-9]{8}-[0-9]{6}$ ]]; then
+      echo "invalid backup name" >&2
+      exit 2
+    fi
+    src="$CONFIG_DIR/$name"
+    if [ ! -f "$src" ]; then
+      echo "backup not found" >&2
+      exit 2
+    fi
+    install -o clash -g clash -m 0644 "$src" "$CONFIG_FILE"
+    echo "restored=$name"
+    ;;
+  restart)
+    systemctl restart clash
+    ;;
+  uptime)
+    ps -o etimes= -C clash 2>/dev/null | head -1 | tr -d ' \n'
+    ;;
+  *)
+    echo "usage: $0 {read|validate|apply|restore <backup>|restart|uptime}" >&2
+    exit 2
+    ;;
+esac

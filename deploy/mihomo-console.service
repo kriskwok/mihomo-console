@@ -1,0 +1,18 @@
+[Unit]
+Description=Mihomo Console
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mihomo-console
+Group=mihomo-console
+WorkingDirectory=/opt/mihomo-console/server
+Environment=MIHOMO_CONSOLE_CONFIG=/etc/mihomo-console/config.json
+ExecStart=/usr/local/bin/node src/server.js
+Restart=always
+RestartSec=4
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
